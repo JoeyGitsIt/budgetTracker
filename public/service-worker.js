@@ -12,7 +12,7 @@ let fileCache = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) {
+    caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(fileCache)
     })
   );
@@ -20,6 +20,7 @@ self.addEventListener("install", (event) => {
 
 // look up where DATA_CACHE_NAME is coming from, also look at respondWith. test if I can run my if (response.status) without the .then above
 
+// NEEDS WORK
 
 self.addEventListener("fetch", (event) => {
   if (event.request.url.includes("/api/")) {
@@ -27,3 +28,5 @@ self.addEventListener("fetch", (event) => {
       caches.open(DATA_CACHE_NAME).then((cache) => {
         return fetch(event.request)
 })
+  }
+}
