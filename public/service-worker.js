@@ -10,23 +10,45 @@ let fileCache = [
   "https://cdn.jsdelivr.net/npm/chart.js@2.8.0",
 ];
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
+self.addEventListener("install", (e) => {
+  e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(fileCache)
+      return cache.addAll(fileCache);
     })
   );
 });
 
-// look up where DATA_CACHE_NAME is coming from, also look at respondWith. test if I can run my if (response.status) without the .then above
+self.addEventListener("fetch", function (e) {
+  if (e.request.url.includes("/api/")) {
+    e.respondWith(
+      caches
+        .open(DATA_CACHE_NAME)
+        .then((cache) => {
+          return fetch(e.request)
+            .then((response) => {
+              // If the response was good, clone it and store it in the cache.
+              if (response.status === 200) {
+                cache.put(e.request.url, response.clone());
+              }
 
-// NEEDS WORK
+              return response;
+            })
+            .catch((err) => {
+              // Network request failed, try to get it from the cache.
+              return cache.match(e.request);
+            });
+        })
+        .catch((err) => console.log(err))
+    );
 
-self.addEventListener("fetch", (event) => {
-  if (event.request.url.includes("/api/")) {
-    event.respondWith(
-      caches.open(DATA_CACHE_NAME).then((cache) => {
-        return fetch(event.request)
-})
+    return;
   }
-}
+
+  e.respondWith(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(e.request).then((response) => {
+        return response || fetch(e.request);
+      });
+    })
+  );
+});
